@@ -108,6 +108,7 @@ export default function TransactionsPage() {
       date: tx.date,
       category_id: tx.category_id ?? '',
       account_id: tx.account_id ?? '',
+      payment_method: tx.payment_method ?? '',
       notes: tx.notes ?? '',
     })
     setEditingId(tx.id)

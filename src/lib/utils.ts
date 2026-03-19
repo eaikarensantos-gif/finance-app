@@ -103,6 +103,26 @@ export function parseWhatsAppMessage(text: string): {
 }
 
 // Mapeia descrição para categoria (heurística simples)
+export function detectPaymentMethod(description: string): string {
+  const lower = description.toLowerCase()
+  if (/\bpix\b|transferência|ted\b|doc\b/.test(lower)) return 'pix'
+  if (/crédito|credito|cartão cred|parcel/.test(lower)) return 'credit'
+  if (/débito|debito|cartão deb/.test(lower)) return 'debit'
+  if (/saque|espécie|dinheiro/.test(lower)) return 'cash'
+  return 'other'
+}
+
+export function paymentMethodLabel(method: string | null): string {
+  const labels: Record<string, string> = {
+    pix: 'PIX',
+    credit: 'Cartão de Crédito',
+    debit: 'Cartão de Débito',
+    cash: 'Dinheiro',
+    other: 'Outro',
+  }
+  return labels[method ?? 'other'] ?? 'Outro'
+}
+
 export function guessCategory(description: string): string {
   const lower = description.toLowerCase()
   if (/mercado|supermercado|feira|hortifruti/.test(lower)) return 'Supermercado'

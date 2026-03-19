@@ -60,6 +60,7 @@ export default function TransactionsPage() {
       date: form.date,
       category_id: form.category_id || null,
       account_id: form.account_id || null,
+      payment_method: form.payment_method || null,
       notes: form.notes || null,
     }
 

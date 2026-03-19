@@ -193,7 +193,7 @@ export default function TransactionsPage() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-slate-100">{tx.description}</p>
+                      <p className="text-sm font-medium text-slate-100">{cleanDescription(tx.description)}</p>
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border ${badge.cls}`}>
                         {badge.label}
                       </span>

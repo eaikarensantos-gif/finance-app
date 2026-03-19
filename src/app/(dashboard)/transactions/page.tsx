@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import { formatCurrency, formatDate, guessCategory } from '@/lib/utils'
+import { formatCurrency, formatDate, guessCategory, detectPaymentMethod, paymentMethodLabel } from '@/lib/utils'
 import type { Transaction, Account, Category } from '@/types'
 import { Plus, Search, Trash2, Edit2, X, Loader2, AlertTriangle } from 'lucide-react'
 

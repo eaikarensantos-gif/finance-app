@@ -252,10 +252,12 @@ export default function TransactionsPage() {
                     const desc = e.target.value
                     const guessedName = guessCategory(desc)
                     const matched = categories.find(c => c.name === guessedName)
+                    const method = detectPaymentMethod(desc)
                     setForm(f => ({
                       ...f,
                       description: desc,
                       category_id: matched && !f.category_id ? matched.id : f.category_id,
+                      payment_method: !f.payment_method ? method : f.payment_method,
                     }))
                   }}
                 />

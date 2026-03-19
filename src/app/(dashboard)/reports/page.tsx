@@ -41,7 +41,7 @@ export default function ReportsPage() {
     // Transações do mês
     const { data: txs } = await supabase
       .from('transactions')
-      .select('type, amount, category_id, category:categories(name, color)')
+      .select('type, amount, category_id, payment_method, description, category:categories(name, color)')
       .eq('user_id', user.id)
       .gte('date', start)
       .lte('date', end)

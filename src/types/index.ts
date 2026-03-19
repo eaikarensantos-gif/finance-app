@@ -10,6 +10,8 @@ export interface Account {
   balance: number
   color: string
   icon: string
+  profile?: 'pf' | 'pj'
+  company_name?: string
   created_at: string
   updated_at: string
 }

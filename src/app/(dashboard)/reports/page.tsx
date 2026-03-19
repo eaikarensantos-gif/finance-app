@@ -19,6 +19,7 @@ export default function ReportsPage() {
   const [barData, setBarData] = useState<any[]>([])
   const [pieExpense, setPieExpense] = useState<any[]>([])
   const [pieIncome, setPieIncome] = useState<any[]>([])
+  const [piePayment, setPiePayment] = useState<any[]>([])
   const [summary, setSummary] = useState({ income: 0, expense: 0, balance: 0, txCount: 0 })
 
   const months = Array.from({ length: 6 }, (_, i) => {

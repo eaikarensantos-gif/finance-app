@@ -72,6 +72,19 @@ export default function ReportsPage() {
     })
     setPieIncome(Object.values(incMap).sort((a, b) => b.value - a.value))
 
+    // Pie despesas por método de pagamento
+    const PAYMENT_COLORS: Record<string, string> = {
+      pix: '#22c55e', credit: '#6366f1', debit: '#f59e0b', cash: '#06b6d4', other: '#6b7280'
+    }
+    const payMap: Record<string, any> = {}
+    ;(txs ?? []).filter(t => t.type === 'expense').forEach((t: any) => {
+      const method = (t as any).payment_method || detectPaymentMethod(t.description ?? '')
+      const label = paymentMethodLabel(method)
+      if (!payMap[method]) payMap[method] = { name: label, value: 0, color: PAYMENT_COLORS[method] ?? '#6b7280' }
+      payMap[method].value += Number(t.amount)
+    })
+    setPiePayment(Object.values(payMap).sort((a, b) => b.value - a.value))
+
     // Bar: últimos 6 meses
     const trend = await Promise.all(
       getLast6Months().map(async ({ label, start: s, end: e }) => {

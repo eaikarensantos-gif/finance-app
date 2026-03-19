@@ -289,6 +289,18 @@ export default function TransactionsPage() {
               </div>
 
               <div>
+                <label className="label">Método de Pagamento</label>
+                <select className="input" value={form.payment_method} onChange={e => setForm(f => ({ ...f, payment_method: e.target.value }))}>
+                  <option value="">Não informado</option>
+                  <option value="pix">PIX</option>
+                  <option value="credit">Cartão de Crédito</option>
+                  <option value="debit">Cartão de Débito</option>
+                  <option value="cash">Dinheiro</option>
+                  <option value="other">Outro</option>
+                </select>
+              </div>
+
+              <div>
                 <label className="label">Observações</label>
                 <textarea className="input resize-none" rows={2} placeholder="Opcional..." value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
               </div>

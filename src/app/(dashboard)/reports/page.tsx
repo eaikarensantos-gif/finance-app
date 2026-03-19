@@ -155,6 +155,42 @@ export default function ReportsPage() {
             </ResponsiveContainer>
           </div>
 
+          {/* Despesas por método de pagamento */}
+          <div className="card">
+            <h2 className="text-base font-semibold text-white mb-4">Despesas por Método de Pagamento</h2>
+            {piePayment.length > 0 ? (
+              <div className="flex flex-col lg:flex-row items-center gap-6">
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie data={piePayment} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value">
+                      {piePayment.map((e, i) => <Cell key={i} fill={e.color} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: 12 }} formatter={(v: number) => formatCurrency(v)} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="w-full space-y-2">
+                  {piePayment.map(item => {
+                    const pct = summary.expense > 0 ? (item.value / summary.expense * 100).toFixed(1) : '0'
+                    return (
+                      <div key={item.name}>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: item.color }} />
+                            <span className="text-slate-300">{item.name}</span>
+                          </span>
+                          <span className="text-slate-400">{pct}% · {formatCurrency(item.value)}</span>
+                        </div>
+                        <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: item.color }} />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : <p className="text-slate-500 text-sm py-8 text-center">Nenhuma despesa neste período</p>}
+          </div>
+
           {/* Pies */}
           <div className="grid lg:grid-cols-2 gap-6">
             <div className="card">

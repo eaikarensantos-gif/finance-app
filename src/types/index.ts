@@ -39,6 +39,7 @@ export interface Transaction {
   date: string
   notes: string | null
   source: string
+  payment_method: string | null
   created_at: string
   updated_at: string
   // joins

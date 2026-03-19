@@ -220,7 +220,7 @@ export default function TransactionsPage() {
                   </div>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         )}
       </div>

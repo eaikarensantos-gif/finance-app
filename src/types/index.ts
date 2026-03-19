@@ -1,6 +1,7 @@
 export type AccountType = 'checking' | 'savings' | 'credit' | 'cash' | 'investment'
 export type TransactionType = 'income' | 'expense' | 'transfer'
 export type CategoryType = 'income' | 'expense'
+export type PaymentMethod = 'pix' | 'credit' | 'debit' | 'cash' | 'other'
 
 export interface Account {
   id: string

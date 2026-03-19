@@ -48,87 +48,99 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   return (
     <>
       {open && (
-        <div className="fixed inset-0 bg-black/60 z-20 lg:hidden" onClick={onClose} />
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-20 lg:hidden" onClick={onClose} />
       )}
 
       <aside className={cn(
-        'fixed top-0 left-0 h-full w-64 bg-slate-900 border-r border-slate-800 z-30 flex flex-col transition-transform duration-300',
+        'fixed top-0 left-0 h-full w-64 bg-slate-950 border-r border-slate-800/60 z-30 flex flex-col transition-transform duration-300',
         'lg:translate-x-0',
         open ? 'translate-x-0' : '-translate-x-full'
       )}>
         {/* Logo */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-800">
+        <div className="flex items-center justify-between px-5 py-5 border-b border-slate-800/60">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-primary-500/20 rounded-xl flex items-center justify-center">
-              <TrendingUp size={20} className="text-primary-400" />
+            <div className="w-8 h-8 bg-primary-500/20 border border-primary-500/30 rounded-xl flex items-center justify-center">
+              <TrendingUp size={16} className="text-primary-400" />
             </div>
-            <span className="text-lg font-bold text-white">FinanceApp</span>
+            <span className="text-base font-bold text-white tracking-tight">FinanceApp</span>
           </div>
-          <button onClick={onClose} className="lg:hidden text-slate-400 hover:text-white">
-            <X size={20} />
+          <button onClick={onClose} className="lg:hidden text-slate-500 hover:text-white transition-colors p-1">
+            <X size={18} />
           </button>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {/* PF */}
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+          {/* PF section label */}
+          <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest px-3 pb-2 pt-1">Pessoal</p>
+
           {navItems.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(href + '/')
             return (
               <Link key={href} href={href} onClick={onClose}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
-                  active ? 'bg-primary-500/20 text-primary-400' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'
+                  'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group',
+                  active
+                    ? 'bg-primary-500/15 text-primary-400 border border-primary-500/20'
+                    : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 border border-transparent'
                 )}>
-                <Icon size={18} />
+                <Icon size={16} className={active ? 'text-primary-400' : 'text-slate-500 group-hover:text-slate-300 transition-colors'} />
                 {label}
               </Link>
             )
           })}
 
           {/* PJ Section */}
-          <div className="pt-2">
+          <div className="pt-3">
             <button
               onClick={() => setPjOpen(!pjOpen)}
-              className="flex items-center justify-between w-full px-3 py-2 text-xs font-bold text-slate-500 uppercase tracking-wider hover:text-slate-400 transition-colors"
+              className="flex items-center justify-between w-full px-3 py-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest hover:text-slate-400 transition-colors"
             >
-              <span className="flex items-center gap-2"><Building2 size={14} /> Pessoa Jurídica</span>
-              <ChevronDown size={14} className={cn('transition-transform', pjOpen ? 'rotate-180' : '')} />
+              <span className="flex items-center gap-2">
+                <Building2 size={11} />
+                Pessoa Jurídica
+              </span>
+              <ChevronDown size={12} className={cn('transition-transform duration-200', pjOpen ? 'rotate-180' : '')} />
             </button>
 
-            {pjOpen && pjItems.map(({ href, label, icon: Icon }) => {
-              const active = pathname === href || pathname.startsWith(href + '/')
-              return (
-                <Link key={href} href={href} onClick={onClose}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
-                    active ? 'bg-blue-500/20 text-blue-400' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'
-                  )}>
-                  <Icon size={18} />
-                  {label}
-                </Link>
-              )
-            })}
-          </div>
-
-          {/* Settings */}
-          <div className="pt-2">
-            <Link href="/settings" onClick={onClose}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
-                pathname === '/settings' ? 'bg-primary-500/20 text-primary-400' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'
-              )}>
-              <Settings size={18} />
-              Configurações
-            </Link>
+            {pjOpen && (
+              <div className="space-y-0.5 mt-0.5">
+                {pjItems.map(({ href, label, icon: Icon }) => {
+                  const active = pathname === href || pathname.startsWith(href + '/')
+                  return (
+                    <Link key={href} href={href} onClick={onClose}
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group',
+                        active
+                          ? 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/20'
+                          : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 border border-transparent'
+                      )}>
+                      <Icon size={16} className={active ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300 transition-colors'} />
+                      {label}
+                    </Link>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </nav>
 
-        {/* Logout */}
-        <div className="p-4 border-t border-slate-800">
+        {/* Bottom */}
+        <div className="px-3 pb-4 space-y-0.5 border-t border-slate-800/60 pt-3">
+          <Link href="/settings" onClick={onClose}
+            className={cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group border',
+              pathname === '/settings'
+                ? 'bg-primary-500/15 text-primary-400 border-primary-500/20'
+                : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 border-transparent'
+            )}>
+            <Settings size={16} className="text-slate-500 group-hover:text-slate-300 transition-colors" />
+            Configurações
+          </Link>
+
           <button onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors w-full">
-            <LogOut size={20} />
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-red-500/10 hover:text-red-400 transition-all duration-150 w-full border border-transparent">
+            <LogOut size={16} />
             Sair
           </button>
         </div>

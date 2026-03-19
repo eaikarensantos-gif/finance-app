@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2, LogIn } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -34,8 +34,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="card">
-      <h2 className="text-xl font-bold text-white mb-6">Entrar na sua conta</h2>
+    <div className="card shadow-2xl shadow-black/50">
+      <div className="mb-6">
+        <h2 className="text-xl font-bold text-white">Bem-vinda de volta 👋</h2>
+        <p className="text-slate-400 text-sm mt-1">Entre com sua conta para continuar</p>
+      </div>
 
       <form onSubmit={handleLogin} className="space-y-4">
         <div>
@@ -64,31 +67,33 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
             >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
         </div>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-400 text-sm">
-            {error}
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-400 text-sm flex items-center gap-2">
+            <span className="text-base">⚠️</span> {error}
           </div>
         )}
 
-        <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2" disabled={loading}>
-          {loading && <Loader2 size={18} className="animate-spin" />}
+        <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2 mt-2" disabled={loading}>
+          {loading ? <Loader2 size={16} className="animate-spin" /> : <LogIn size={16} />}
           {loading ? 'Entrando...' : 'Entrar'}
         </button>
       </form>
 
-      <p className="text-center text-slate-400 text-sm mt-6">
-        Não tem conta?{' '}
-        <Link href="/register" className="text-primary-400 hover:text-primary-300 font-medium">
-          Cadastre-se grátis
-        </Link>
-      </p>
+      <div className="mt-6 pt-5 border-t border-slate-800 text-center">
+        <p className="text-slate-400 text-sm">
+          Não tem conta?{' '}
+          <Link href="/register" className="text-primary-400 hover:text-primary-300 font-semibold transition-colors">
+            Cadastre-se grátis
+          </Link>
+        </p>
+      </div>
     </div>
   )
 }

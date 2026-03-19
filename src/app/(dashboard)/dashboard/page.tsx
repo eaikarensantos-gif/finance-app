@@ -115,45 +115,53 @@ export default function DashboardPage() {
     <div className="space-y-6">
       {/* Cards de resumo */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card">
+        <div className="stat-card-slate">
           <div className="flex items-start justify-between mb-3">
-            <p className="text-slate-400 text-sm">Saldo Total</p>
-            <Wallet size={20} className="text-primary-400" />
+            <p className="text-slate-400 text-xs font-semibold uppercase tracking-wide">Saldo Total</p>
+            <div className="w-8 h-8 rounded-xl bg-slate-700/50 flex items-center justify-center">
+              <Wallet size={16} className="text-slate-300" />
+            </div>
           </div>
           <p className="text-2xl font-bold text-white">{formatCurrency(totalBalance)}</p>
-          <p className="text-slate-500 text-xs mt-1">{accounts.length} conta{accounts.length !== 1 ? 's' : ''}</p>
+          <p className="text-slate-500 text-xs mt-1.5">{accounts.length} conta{accounts.length !== 1 ? 's' : ''}</p>
         </div>
 
-        <div className="card">
+        <div className="stat-card-green">
           <div className="flex items-start justify-between mb-3">
-            <p className="text-slate-400 text-sm">Receitas (mês)</p>
-            <TrendingUp size={20} className="text-primary-400" />
+            <p className="text-slate-400 text-xs font-semibold uppercase tracking-wide">Receitas</p>
+            <div className="w-8 h-8 rounded-xl bg-primary-500/20 flex items-center justify-center">
+              <TrendingUp size={16} className="text-primary-400" />
+            </div>
           </div>
           <p className="text-2xl font-bold text-primary-400">{formatCurrency(monthIncome)}</p>
-          <p className="text-slate-500 text-xs mt-1">Este mês</p>
+          <p className="text-slate-500 text-xs mt-1.5">Este mês</p>
         </div>
 
-        <div className="card">
+        <div className="stat-card-red">
           <div className="flex items-start justify-between mb-3">
-            <p className="text-slate-400 text-sm">Despesas (mês)</p>
-            <TrendingDown size={20} className="text-red-400" />
+            <p className="text-slate-400 text-xs font-semibold uppercase tracking-wide">Despesas</p>
+            <div className="w-8 h-8 rounded-xl bg-red-500/20 flex items-center justify-center">
+              <TrendingDown size={16} className="text-red-400" />
+            </div>
           </div>
           <p className="text-2xl font-bold text-red-400">{formatCurrency(monthExpense)}</p>
-          <p className="text-slate-500 text-xs mt-1">Este mês</p>
+          <p className="text-slate-500 text-xs mt-1.5">Este mês</p>
         </div>
 
-        <div className="card">
+        <div className={monthIncome - monthExpense >= 0 ? 'stat-card-green' : 'stat-card-red'}>
           <div className="flex items-start justify-between mb-3">
-            <p className="text-slate-400 text-sm">Saldo do Mês</p>
-            {monthIncome - monthExpense >= 0
-              ? <ArrowUpRight size={20} className="text-primary-400" />
-              : <ArrowDownRight size={20} className="text-red-400" />
-            }
+            <p className="text-slate-400 text-xs font-semibold uppercase tracking-wide">Saldo do Mês</p>
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${monthIncome - monthExpense >= 0 ? 'bg-primary-500/20' : 'bg-red-500/20'}`}>
+              {monthIncome - monthExpense >= 0
+                ? <ArrowUpRight size={16} className="text-primary-400" />
+                : <ArrowDownRight size={16} className="text-red-400" />
+              }
+            </div>
           </div>
           <p className={`text-2xl font-bold ${monthIncome - monthExpense >= 0 ? 'text-primary-400' : 'text-red-400'}`}>
             {formatCurrency(monthIncome - monthExpense)}
           </p>
-          <p className="text-slate-500 text-xs mt-1">Receitas - Despesas</p>
+          <p className="text-slate-500 text-xs mt-1.5">Receitas − Despesas</p>
         </div>
       </div>
 

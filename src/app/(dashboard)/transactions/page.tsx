@@ -172,7 +172,17 @@ export default function TransactionsPage() {
           </div>
         ) : (
           <div className="divide-y divide-slate-800">
-            {filtered.map(tx => (
+            {filtered.map(tx => {
+              const method = tx.payment_method || detectPaymentMethod(tx.description)
+              const methodBadge: Record<string, { label: string; cls: string }> = {
+                pix: { label: 'PIX', cls: 'bg-primary-500/15 text-primary-400 border-primary-500/20' },
+                credit: { label: 'Crédito', cls: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/20' },
+                debit: { label: 'Débito', cls: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/20' },
+                cash: { label: 'Dinheiro', cls: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/20' },
+                other: { label: 'Outro', cls: 'bg-slate-700/50 text-slate-400 border-slate-600/30' },
+              }
+              const badge = methodBadge[method] ?? methodBadge.other
+              return (
               <div key={tx.id} className="flex items-center justify-between px-6 py-4 hover:bg-slate-800/50 transition-colors">
                 <div className="flex items-center gap-3">
                   <div
@@ -182,12 +192,17 @@ export default function TransactionsPage() {
                     {tx.type === 'income' ? '↑' : '↓'}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-slate-100">{tx.description}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-slate-100">{tx.description}</p>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border ${badge.cls}`}>
+                        {badge.label}
+                      </span>
+                      {tx.source === 'whatsapp' && <span className="text-xs text-primary-400">📱</span>}
+                    </div>
                     <p className="text-xs text-slate-500">
                       {(tx.category as any)?.name ?? 'Sem categoria'}
                       {tx.account && ` · ${(tx.account as any).name}`}
                       {' · '}{formatDate(tx.date)}
-                      {tx.source === 'whatsapp' && <span className="ml-1 text-primary-400">📱 WhatsApp</span>}
                     </p>
                   </div>
                 </div>

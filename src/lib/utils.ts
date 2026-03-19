@@ -123,6 +123,43 @@ export function paymentMethodLabel(method: string | null): string {
   return labels[method ?? 'other'] ?? 'Outro'
 }
 
+// Remove prefixos verbosos de extratos bancários deixando só o essencial
+export function cleanDescription(description: string): string {
+  let clean = description
+
+  // Remove prefixos comuns de extratos Nubank/bancários
+  const prefixes = [
+    /^Transferência enviada pelo Pix\s*-\s*/i,
+    /^Transferência recebida pelo Pix\s*-\s*/i,
+    /^Pix enviado\s*-\s*/i,
+    /^Pix recebido\s*-\s*/i,
+    /^Compra no débito\s*-\s*/i,
+    /^Compra no crédito\s*-\s*/i,
+    /^Compra por aproximação\s*-\s*/i,
+    /^Pagamento de boleto efetuado\s*-\s*/i,
+    /^Pagamento efetuado\s*-\s*/i,
+    /^Pagamento realizado\s*-\s*/i,
+    /^Débito automático\s*-\s*/i,
+    /^Transferência\s*-\s*/i,
+  ]
+
+  for (const prefix of prefixes) {
+    if (prefix.test(clean)) {
+      clean = clean.replace(prefix, '')
+      break
+    }
+  }
+
+  // Remove CPF mascarado e dados bancários: " - •••.XXX.XXX-•• - BANCO..."
+  clean = clean.replace(/\s*-\s*[•\*]{3}\.[\d•\*]+\.[\d•\*]+-[•\*]{2}.*$/s, '')
+
+  // Remove sufixos como "(Transferência enviada)", "(Transferência recebida)"
+  clean = clean.replace(/\s*\([^)]*transferência[^)]*\)\s*$/i, '')
+  clean = clean.replace(/\s*\([^)]*pix[^)]*\)\s*$/i, '')
+
+  return clean.trim()
+}
+
 export function guessCategory(description: string): string {
   const lower = description.toLowerCase()
   if (/mercado|supermercado|feira|hortifruti/.test(lower)) return 'Supermercado'

@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { Plus, Trash2, Edit2, X, Loader2, FileText, CheckCircle2, Clock, AlertCircle } from 'lucide-react'
+import { Plus, Trash2, Edit2, X, Loader2, FileText, CheckCircle2, Clock, AlertCircle, Upload } from 'lucide-react'
+import CsvImportModal from '@/components/CsvImportModal'
 
 const STATUS_LABELS: Record<string, { label: string; color: string; icon: any }> = {
   pending: { label: 'Pendente', color: 'text-yellow-400 bg-yellow-400/10', icon: Clock },
@@ -27,6 +28,7 @@ export default function InvoicesPage() {
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState(EMPTY)
   const [filterStatus, setFilterStatus] = useState<string>('all')
+  const [showImport, setShowImport] = useState(false)
 
   useEffect(() => { load() }, [])
 
@@ -131,9 +133,14 @@ export default function InvoicesPage() {
             </button>
           ))}
         </div>
-        <button onClick={() => { setForm(EMPTY); setEditingId(null); setShowModal(true) }} className="btn-primary flex items-center gap-2">
-          <Plus size={18} /> Nova NF
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => setShowImport(true)} className="btn-secondary flex items-center gap-2 text-sm">
+            <Upload size={16} /> Importar CSV
+          </button>
+          <button onClick={() => { setForm(EMPTY); setEditingId(null); setShowModal(true) }} className="btn-primary flex items-center gap-2">
+            <Plus size={18} /> Nova NF
+          </button>
+        </div>
       </div>
 
       {/* Lista */}
@@ -185,6 +192,37 @@ export default function InvoicesPage() {
           </div>
         )}
       </div>
+
+      {showImport && (
+        <CsvImportModal
+          title="Notas Fiscais"
+          expectedColumns={['number', 'description', 'amount', 'issue_date', 'due_date', 'status']}
+          columnLabels={{ number: 'Número NF', description: 'Descrição', amount: 'Valor (R$)', issue_date: 'Data Emissão', due_date: 'Vencimento', status: 'Status' }}
+          templateRow={{ number: '00123', description: 'Desenvolvimento de software', amount: '5000.00', issue_date: '2026-01-01', due_date: '2026-01-31', status: 'paid' }}
+          onClose={() => { setShowImport(false); load() }}
+          onImport={async (rows) => {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) return { success: 0, errors: 0 }
+            let success = 0, errors = 0
+            for (const row of rows) {
+              if (!row.description || !row.amount) { errors++; continue }
+              const { error } = await supabase.from('invoices').insert({
+                user_id: user.id,
+                number: row.number || null,
+                description: row.description,
+                amount: parseFloat(row.amount) || 0,
+                issue_date: row.issue_date || new Date().toISOString().split('T')[0],
+                due_date: row.due_date || null,
+                status: row.status || 'pending',
+                iss_rate: 0.05,
+                simples_rate: 0.06,
+              })
+              if (error) errors++; else success++
+            }
+            return { success, errors }
+          }}
+        />
+      )}
 
       {/* Modal */}
       {showModal && (

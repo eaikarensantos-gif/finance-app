@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { formatCurrency } from '@/lib/utils'
-import { Plus, Trash2, Edit2, X, Loader2, Users } from 'lucide-react'
+import { Plus, Trash2, Edit2, X, Loader2, Users, Upload } from 'lucide-react'
+import CsvImportModal from '@/components/CsvImportModal'
 
 const EMPTY = { name: '', document: '', email: '', phone: '', notes: '' }
 
@@ -16,6 +17,7 @@ export default function ClientsPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState(EMPTY)
+  const [showImport, setShowImport] = useState(false)
 
   useEffect(() => { load() }, [])
 
@@ -69,9 +71,14 @@ export default function ClientsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <p className="text-slate-400 text-sm">{clients.length} cliente{clients.length !== 1 ? 's' : ''} cadastrado{clients.length !== 1 ? 's' : ''}</p>
-        <button onClick={() => { setForm(EMPTY); setEditingId(null); setShowModal(true) }} className="btn-primary flex items-center gap-2">
-          <Plus size={18} /> Novo Cliente
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => setShowImport(true)} className="btn-secondary flex items-center gap-2 text-sm">
+            <Upload size={16} /> Importar CSV
+          </button>
+          <button onClick={() => { setForm(EMPTY); setEditingId(null); setShowModal(true) }} className="btn-primary flex items-center gap-2">
+            <Plus size={18} /> Novo Cliente
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -107,6 +114,27 @@ export default function ClientsPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {showImport && (
+        <CsvImportModal
+          title="Clientes"
+          expectedColumns={['name', 'document', 'email', 'phone']}
+          columnLabels={{ name: 'Nome/Razão Social', document: 'CNPJ/CPF', email: 'Email', phone: 'Telefone' }}
+          templateRow={{ name: 'Empresa Exemplo Ltda', document: '00.000.000/0001-00', email: 'contato@empresa.com', phone: '(11) 99999-9999' }}
+          onClose={() => { setShowImport(false); load() }}
+          onImport={async (rows) => {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) return { success: 0, errors: 0 }
+            let success = 0, errors = 0
+            for (const row of rows) {
+              if (!row.name) { errors++; continue }
+              const { error } = await supabase.from('clients').insert({ user_id: user.id, name: row.name, document: row.document || null, email: row.email || null, phone: row.phone || null })
+              if (error) errors++; else success++
+            }
+            return { success, errors }
+          }}
+        />
       )}
 
       {showModal && (

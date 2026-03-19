@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { Plus, X, Loader2, CheckCircle2, AlertCircle, Clock, Landmark, User } from 'lucide-react'
+import { Plus, X, Loader2, CheckCircle2, AlertCircle, Clock, Landmark, User, Upload } from 'lucide-react'
+import CsvImportModal from '@/components/CsvImportModal'
 import { format, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -32,6 +33,7 @@ export default function TaxesPage() {
   const [settings, setSettings] = useState<any>(null)
   const [showTaxModal, setShowTaxModal] = useState(false)
   const [showPLModal, setShowPLModal] = useState(false)
+  const [showImport, setShowImport] = useState(false)
   const [saving, setSaving] = useState(false)
   const [rbt12, setRbt12] = useState(0)
   const [taxForm, setTaxForm] = useState({
@@ -164,9 +166,14 @@ export default function TaxesPage() {
       {/* DAS */}
       <div className="flex items-center justify-between">
         <h3 className="text-base font-bold text-white">Histórico de DAS</h3>
-        <button onClick={() => setShowTaxModal(true)} className="btn-primary flex items-center gap-2 text-sm">
-          <Plus size={16} /> Registrar DAS
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => setShowImport(true)} className="btn-secondary flex items-center gap-2 text-sm">
+            <Upload size={16} /> Importar CSV
+          </button>
+          <button onClick={() => setShowTaxModal(true)} className="btn-primary flex items-center gap-2 text-sm">
+            <Plus size={16} /> Registrar DAS
+          </button>
+        </div>
       </div>
 
       <div className="card p-0 overflow-hidden">
@@ -239,6 +246,38 @@ export default function TaxesPage() {
           </div>
         )}
       </div>
+
+      {showImport && (
+        <CsvImportModal
+          title="DAS"
+          expectedColumns={['reference_month', 'reference_year', 'regime', 'gross_revenue', 'amount', 'due_date', 'status']}
+          columnLabels={{ reference_month: 'Mês', reference_year: 'Ano', regime: 'Regime (mei/simples)', gross_revenue: 'Receita Bruta', amount: 'Valor DAS', due_date: 'Vencimento', status: 'Status (paid/pending)' }}
+          templateRow={{ reference_month: '1', reference_year: '2025', regime: 'mei', gross_revenue: '8000', amount: '70.60', due_date: '2025-02-20', status: 'paid' }}
+          onClose={() => { setShowImport(false); load() }}
+          onImport={async (rows) => {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) return { success: 0, errors: 0 }
+            let success = 0, errors = 0
+            for (const row of rows) {
+              if (!row.amount) { errors++; continue }
+              const regime = row.regime?.toLowerCase().includes('mei') ? 'mei' : 'simples'
+              const { error } = await supabase.from('tax_entries').insert({
+                user_id: user.id,
+                type: regime === 'mei' ? 'das_mei' : 'das_simples',
+                regime,
+                reference_month: parseInt(row.reference_month) || 1,
+                reference_year: parseInt(row.reference_year) || new Date().getFullYear(),
+                gross_revenue: parseFloat(row.gross_revenue) || null,
+                amount: parseFloat(row.amount),
+                due_date: row.due_date || null,
+                status: row.status || 'pending',
+              })
+              if (error) errors++; else success++
+            }
+            return { success, errors }
+          }}
+        />
+      )}
 
       {/* Modal DAS */}
       {showTaxModal && (

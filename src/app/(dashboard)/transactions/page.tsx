@@ -13,6 +13,7 @@ const EMPTY_FORM = {
   date: new Date().toISOString().split('T')[0],
   category_id: '',
   account_id: '',
+  payment_method: '',
   notes: '',
 }
 

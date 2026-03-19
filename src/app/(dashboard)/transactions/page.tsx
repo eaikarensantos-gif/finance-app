@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatCurrency, formatDate, guessCategory } from '@/lib/utils'
 import type { Transaction, Account, Category } from '@/types'
 import { Plus, Search, Trash2, Edit2, X, Loader2, AlertTriangle } from 'lucide-react'
 
@@ -240,7 +240,22 @@ export default function TransactionsPage() {
 
               <div>
                 <label className="label">Descrição</label>
-                <input type="text" className="input" placeholder="Ex: Mercado, Salário..." value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
+                <input
+                  type="text"
+                  className="input"
+                  placeholder="Ex: Mercado, Salário..."
+                  value={form.description}
+                  onChange={e => {
+                    const desc = e.target.value
+                    const guessedName = guessCategory(desc)
+                    const matched = categories.find(c => c.name === guessedName)
+                    setForm(f => ({
+                      ...f,
+                      description: desc,
+                      category_id: matched && !f.category_id ? matched.id : f.category_id,
+                    }))
+                  }}
+                />
               </div>
 
               <div>

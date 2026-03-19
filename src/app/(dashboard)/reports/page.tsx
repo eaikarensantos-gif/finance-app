@@ -10,6 +10,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, Legend
 } from 'recharts'
 import { Loader2 } from 'lucide-react'
+import { detectPaymentMethod, paymentMethodLabel } from '@/lib/utils'
 
 export default function ReportsPage() {
   const supabase = createClient()

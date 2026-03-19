@@ -1,0 +1,23 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
+
+export async function GET() {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { data, error } = await supabase.from('accounts').select('*').eq('user_id', user.id).order('created_at')
+  if (error) return NextResponse.json({ error }, { status: 500 })
+  return NextResponse.json(data)
+}
+
+export async function POST(req: NextRequest) {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const body = await req.json()
+  const { data, error } = await supabase.from('accounts').insert({ ...body, user_id: user.id }).select().single()
+  if (error) return NextResponse.json({ error }, { status: 500 })
+  return NextResponse.json(data, { status: 201 })
+}

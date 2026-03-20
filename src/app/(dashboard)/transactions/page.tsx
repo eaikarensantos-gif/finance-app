@@ -161,6 +161,16 @@ export default function TransactionsPage() {
             </button>
           ))}
         </div>
+        <select
+          value={filterCategory}
+          onChange={e => setFilterCategory(e.target.value)}
+          className="bg-slate-800 border border-slate-700 text-slate-300 text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-primary-500"
+        >
+          <option value="all">Todas categorias</option>
+          {categories.map(c => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
         {transactions.length > 0 && (
           <button onClick={removeAll} className="btn-danger flex items-center gap-2">
             <AlertTriangle size={16} />

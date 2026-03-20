@@ -130,6 +130,7 @@ export default function TransactionsPage() {
 
   const filtered = transactions.filter(tx => {
     if (filterType !== 'all' && tx.type !== filterType) return false
+    if (filterCategory !== 'all' && tx.category_id !== filterCategory) return false
     if (search && !tx.description.toLowerCase().includes(search.toLowerCase())) return false
     return true
   })

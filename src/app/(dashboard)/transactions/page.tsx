@@ -210,11 +210,32 @@ export default function TransactionsPage() {
                       </span>
                       {tx.source === 'whatsapp' && <span className="text-xs text-primary-400">📱</span>}
                     </div>
-                    <p className="text-xs text-slate-500">
-                      {(tx.category as any)?.name ?? 'Sem categoria'}
-                      {tx.account && ` · ${(tx.account as any).name}`}
-                      {' · '}{formatDate(tx.date)}
-                    </p>
+                    <div className="flex items-center gap-1 text-xs text-slate-500">
+                      {inlineCatId === tx.id ? (
+                        <select
+                          autoFocus
+                          defaultValue={tx.category_id ?? ''}
+                          onBlur={e => saveInlineCategory(tx.id, e.target.value)}
+                          onChange={e => saveInlineCategory(tx.id, e.target.value)}
+                          onClick={e => e.stopPropagation()}
+                          className="bg-slate-800 border border-slate-600 text-slate-200 text-xs rounded-md px-2 py-0.5 focus:outline-none focus:border-primary-500"
+                        >
+                          <option value="">Sem categoria</option>
+                          {categories.map(c => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <button
+                          onClick={() => setInlineCatId(tx.id)}
+                          className="hover:text-slate-200 hover:underline transition-colors cursor-pointer"
+                        >
+                          {(tx.category as any)?.name ?? 'Sem categoria'}
+                        </button>
+                      )}
+                      {tx.account && <span>· {(tx.account as any).name}</span>}
+                      <span>· {formatDate(tx.date)}</span>
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">

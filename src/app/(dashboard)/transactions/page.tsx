@@ -117,6 +117,16 @@ export default function TransactionsPage() {
     setShowModal(true)
   }
 
+  async function saveInlineCategory(txId: string, categoryId: string) {
+    setInlineCatId(null)
+    await supabase.from('transactions').update({ category_id: categoryId || null }).eq('id', txId)
+    setTransactions(prev => prev.map(t => {
+      if (t.id !== txId) return t
+      const cat = categories.find(c => c.id === categoryId)
+      return { ...t, category_id: categoryId || null, category: cat ?? null }
+    }))
+  }
+
   const filtered = transactions.filter(tx => {
     if (filterType !== 'all' && tx.type !== filterType) return false
     if (search && !tx.description.toLowerCase().includes(search.toLowerCase())) return false

@@ -29,6 +29,7 @@ export default function TransactionsPage() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [search, setSearch] = useState('')
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all')
+  const [inlineCatId, setInlineCatId] = useState<string | null>(null)
 
   useEffect(() => { load() }, [])
 

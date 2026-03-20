@@ -5,7 +5,8 @@
       "name": "finance-app",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 3000
+      "port": 3000,
+      "cwd": "C:\\Users\\DELL\\Documents\\finance-app"
     }
   ]
 }

@@ -10,6 +10,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, Legend
 } from 'recharts'
 import { Loader2 } from 'lucide-react'
+import { detectPaymentMethod, paymentMethodLabel } from '@/lib/utils'
 
 export default function ReportsPage() {
   const supabase = createClient()
@@ -18,6 +19,7 @@ export default function ReportsPage() {
   const [barData, setBarData] = useState<any[]>([])
   const [pieExpense, setPieExpense] = useState<any[]>([])
   const [pieIncome, setPieIncome] = useState<any[]>([])
+  const [piePayment, setPiePayment] = useState<any[]>([])
   const [summary, setSummary] = useState({ income: 0, expense: 0, balance: 0, txCount: 0 })
 
   const months = Array.from({ length: 6 }, (_, i) => {
@@ -39,7 +41,7 @@ export default function ReportsPage() {
     // Transações do mês
     const { data: txs } = await supabase
       .from('transactions')
-      .select('type, amount, category_id, category:categories(name, color)')
+      .select('type, amount, category_id, payment_method, description, category:categories(name, color)')
       .eq('user_id', user.id)
       .gte('date', start)
       .lte('date', end)
@@ -69,6 +71,19 @@ export default function ReportsPage() {
       incMap[key].value += Number(t.amount)
     })
     setPieIncome(Object.values(incMap).sort((a, b) => b.value - a.value))
+
+    // Pie despesas por método de pagamento
+    const PAYMENT_COLORS: Record<string, string> = {
+      pix: '#22c55e', credit: '#6366f1', debit: '#f59e0b', cash: '#06b6d4', other: '#6b7280'
+    }
+    const payMap: Record<string, any> = {}
+    ;(txs ?? []).filter(t => t.type === 'expense').forEach((t: any) => {
+      const method = (t as any).payment_method || detectPaymentMethod(t.description ?? '')
+      const label = paymentMethodLabel(method)
+      if (!payMap[method]) payMap[method] = { name: label, value: 0, color: PAYMENT_COLORS[method] ?? '#6b7280' }
+      payMap[method].value += Number(t.amount)
+    })
+    setPiePayment(Object.values(payMap).sort((a, b) => b.value - a.value))
 
     // Bar: últimos 6 meses
     const trend = await Promise.all(
@@ -138,6 +153,42 @@ export default function ReportsPage() {
                 <Bar dataKey="Despesas" fill="#ef4444" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+          </div>
+
+          {/* Despesas por método de pagamento */}
+          <div className="card">
+            <h2 className="text-base font-semibold text-white mb-4">Despesas por Método de Pagamento</h2>
+            {piePayment.length > 0 ? (
+              <div className="flex flex-col lg:flex-row items-center gap-6">
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie data={piePayment} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value">
+                      {piePayment.map((e, i) => <Cell key={i} fill={e.color} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: 12 }} formatter={(v: number) => formatCurrency(v)} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="w-full space-y-2">
+                  {piePayment.map(item => {
+                    const pct = summary.expense > 0 ? (item.value / summary.expense * 100).toFixed(1) : '0'
+                    return (
+                      <div key={item.name}>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: item.color }} />
+                            <span className="text-slate-300">{item.name}</span>
+                          </span>
+                          <span className="text-slate-400">{pct}% · {formatCurrency(item.value)}</span>
+                        </div>
+                        <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: item.color }} />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : <p className="text-slate-500 text-sm py-8 text-center">Nenhuma despesa neste período</p>}
           </div>
 
           {/* Pies */}

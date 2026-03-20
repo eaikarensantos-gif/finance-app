@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import { formatCurrency, formatDate, guessCategory } from '@/lib/utils'
+import { formatCurrency, formatDate, guessCategory, detectPaymentMethod, paymentMethodLabel, cleanDescription } from '@/lib/utils'
 import type { Transaction, Account, Category } from '@/types'
 import { Plus, Search, Trash2, Edit2, X, Loader2, AlertTriangle } from 'lucide-react'
 
@@ -13,6 +13,7 @@ const EMPTY_FORM = {
   date: new Date().toISOString().split('T')[0],
   category_id: '',
   account_id: '',
+  payment_method: '',
   notes: '',
 }
 
@@ -28,6 +29,7 @@ export default function TransactionsPage() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [search, setSearch] = useState('')
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all')
+  const [inlineCatId, setInlineCatId] = useState<string | null>(null)
 
   useEffect(() => { load() }, [])
 
@@ -59,6 +61,7 @@ export default function TransactionsPage() {
       date: form.date,
       category_id: form.category_id || null,
       account_id: form.account_id || null,
+      payment_method: form.payment_method || null,
       notes: form.notes || null,
     }
 
@@ -107,10 +110,21 @@ export default function TransactionsPage() {
       date: tx.date,
       category_id: tx.category_id ?? '',
       account_id: tx.account_id ?? '',
+      payment_method: tx.payment_method ?? '',
       notes: tx.notes ?? '',
     })
     setEditingId(tx.id)
     setShowModal(true)
+  }
+
+  async function saveInlineCategory(txId: string, categoryId: string) {
+    setInlineCatId(null)
+    await supabase.from('transactions').update({ category_id: categoryId || null }).eq('id', txId)
+    setTransactions(prev => prev.map(t => {
+      if (t.id !== txId) return t
+      const cat = categories.find(c => c.id === categoryId)
+      return { ...t, category_id: categoryId || null, category: cat ?? null }
+    }))
   }
 
   const filtered = transactions.filter(tx => {
@@ -169,7 +183,17 @@ export default function TransactionsPage() {
           </div>
         ) : (
           <div className="divide-y divide-slate-800">
-            {filtered.map(tx => (
+            {filtered.map(tx => {
+              const method = tx.payment_method || detectPaymentMethod(tx.description)
+              const methodBadge: Record<string, { label: string; cls: string }> = {
+                pix: { label: 'PIX', cls: 'bg-primary-500/15 text-primary-400 border-primary-500/20' },
+                credit: { label: 'Crédito', cls: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/20' },
+                debit: { label: 'Débito', cls: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/20' },
+                cash: { label: 'Dinheiro', cls: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/20' },
+                other: { label: 'Outro', cls: 'bg-slate-700/50 text-slate-400 border-slate-600/30' },
+              }
+              const badge = methodBadge[method] ?? methodBadge.other
+              return (
               <div key={tx.id} className="flex items-center justify-between px-6 py-4 hover:bg-slate-800/50 transition-colors">
                 <div className="flex items-center gap-3">
                   <div
@@ -179,13 +203,39 @@ export default function TransactionsPage() {
                     {tx.type === 'income' ? '↑' : '↓'}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-slate-100">{tx.description}</p>
-                    <p className="text-xs text-slate-500">
-                      {(tx.category as any)?.name ?? 'Sem categoria'}
-                      {tx.account && ` · ${(tx.account as any).name}`}
-                      {' · '}{formatDate(tx.date)}
-                      {tx.source === 'whatsapp' && <span className="ml-1 text-primary-400">📱 WhatsApp</span>}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-slate-100">{cleanDescription(tx.description)}</p>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border ${badge.cls}`}>
+                        {badge.label}
+                      </span>
+                      {tx.source === 'whatsapp' && <span className="text-xs text-primary-400">📱</span>}
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-slate-500">
+                      {inlineCatId === tx.id ? (
+                        <select
+                          autoFocus
+                          defaultValue={tx.category_id ?? ''}
+                          onBlur={e => saveInlineCategory(tx.id, e.target.value)}
+                          onChange={e => saveInlineCategory(tx.id, e.target.value)}
+                          onClick={e => e.stopPropagation()}
+                          className="bg-slate-800 border border-slate-600 text-slate-200 text-xs rounded-md px-2 py-0.5 focus:outline-none focus:border-primary-500"
+                        >
+                          <option value="">Sem categoria</option>
+                          {categories.map(c => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <button
+                          onClick={() => setInlineCatId(tx.id)}
+                          className="hover:text-slate-200 hover:underline transition-colors cursor-pointer"
+                        >
+                          {(tx.category as any)?.name ?? 'Sem categoria'}
+                        </button>
+                      )}
+                      {tx.account && <span>· {(tx.account as any).name}</span>}
+                      <span>· {formatDate(tx.date)}</span>
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -202,7 +252,7 @@ export default function TransactionsPage() {
                   </div>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         )}
       </div>
@@ -249,10 +299,12 @@ export default function TransactionsPage() {
                     const desc = e.target.value
                     const guessedName = guessCategory(desc)
                     const matched = categories.find(c => c.name === guessedName)
+                    const method = detectPaymentMethod(desc)
                     setForm(f => ({
                       ...f,
                       description: desc,
                       category_id: matched && !f.category_id ? matched.id : f.category_id,
+                      payment_method: !f.payment_method ? method : f.payment_method,
                     }))
                   }}
                 />
@@ -280,6 +332,18 @@ export default function TransactionsPage() {
                   {accounts.map(a => (
                     <option key={a.id} value={a.id}>{a.name}</option>
                   ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="label">Método de Pagamento</label>
+                <select className="input" value={form.payment_method} onChange={e => setForm(f => ({ ...f, payment_method: e.target.value }))}>
+                  <option value="">Não informado</option>
+                  <option value="pix">PIX</option>
+                  <option value="credit">Cartão de Crédito</option>
+                  <option value="debit">Cartão de Débito</option>
+                  <option value="cash">Dinheiro</option>
+                  <option value="other">Outro</option>
                 </select>
               </div>
 

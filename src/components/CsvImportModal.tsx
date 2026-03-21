@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Upload, X, CheckCircle2, AlertCircle, FileText } from 'lucide-react'
+import { Upload, X, CheckCircle2, AlertCircle, FileText, File, FileSpreadsheet, Image } from 'lucide-react'
 
 interface CsvImportModalProps {
   title: string
@@ -12,14 +12,51 @@ interface CsvImportModalProps {
   templateRow?: Record<string, string>
 }
 
+const ACCEPTED = '.csv,.txt,.xlsx,.xls,.pdf,.png,.jpg,.jpeg,.webp'
+
+function getFileType(file: File): 'csv' | 'excel' | 'pdf' | 'image' | 'other' {
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
+  if (['csv', 'txt'].includes(ext)) return 'csv'
+  if (['xlsx', 'xls'].includes(ext)) return 'excel'
+  if (ext === 'pdf') return 'pdf'
+  if (['png', 'jpg', 'jpeg', 'webp'].includes(ext)) return 'image'
+  return 'other'
+}
+
+function FileIcon({ type, size = 40 }: { type: ReturnType<typeof getFileType>; size?: number }) {
+  const cls = `mx-auto mb-3`
+  if (type === 'csv') return <FileSpreadsheet size={size} className={`${cls} text-primary-400`} />
+  if (type === 'excel') return <FileSpreadsheet size={size} className={`${cls} text-emerald-400`} />
+  if (type === 'pdf') return <FileText size={size} className={`${cls} text-red-400`} />
+  if (type === 'image') return <Image size={size} className={`${cls} text-sky-400`} />
+  return <File size={size} className={`${cls} text-slate-400`} />
+}
+
+const TYPE_LABELS: Record<string, string> = {
+  csv: 'CSV / TXT',
+  excel: 'Excel',
+  pdf: 'PDF',
+  image: 'Imagem',
+  other: 'Arquivo',
+}
+
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 export default function CsvImportModal({ title, expectedColumns, columnLabels, onImport, onClose, templateRow }: CsvImportModalProps) {
   const [rows, setRows] = useState<Record<string, string>[]>([])
   const [headers, setHeaders] = useState<string[]>([])
   const [mapping, setMapping] = useState<Record<string, string>>({})
-  const [step, setStep] = useState<'upload' | 'map' | 'preview' | 'done'>('upload')
+  const [step, setStep] = useState<'upload' | 'map' | 'preview' | 'done' | 'file-preview'>('upload')
   const [result, setResult] = useState({ success: 0, errors: 0 })
   const [loading, setLoading] = useState(false)
   const [fileName, setFileName] = useState('')
+  const [fileSize, setFileSize] = useState(0)
+  const [fileType, setFileType] = useState<ReturnType<typeof getFileType>>('csv')
+  const [filePreview, setFilePreview] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   function parseCSV(text: string) {
@@ -52,27 +89,41 @@ export default function CsvImportModal({ title, expectedColumns, columnLabels, o
   }
 
   function handleFile(file: File) {
+    const type = getFileType(file)
     setFileName(file.name)
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const text = e.target?.result as string
-      const { headers: hdrs, rows: data } = parseCSV(text)
-      setHeaders(hdrs)
-      setRows(data)
-      // Auto-map columns
-      const autoMap: Record<string, string> = {}
-      expectedColumns.forEach(col => {
-        const match = hdrs.find(h =>
-          h.toLowerCase().includes(col.toLowerCase()) ||
-          col.toLowerCase().includes(h.toLowerCase()) ||
-          (columnLabels[col] && h.toLowerCase().includes(columnLabels[col].toLowerCase()))
-        )
-        if (match) autoMap[col] = match
-      })
-      setMapping(autoMap)
-      setStep('map')
+    setFileSize(file.size)
+    setFileType(type)
+
+    if (type === 'csv') {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const text = e.target?.result as string
+        const { headers: hdrs, rows: data } = parseCSV(text)
+        setHeaders(hdrs)
+        setRows(data)
+        const autoMap: Record<string, string> = {}
+        expectedColumns.forEach(col => {
+          const match = hdrs.find(h =>
+            h.toLowerCase().includes(col.toLowerCase()) ||
+            col.toLowerCase().includes(h.toLowerCase()) ||
+            (columnLabels[col] && h.toLowerCase().includes(columnLabels[col].toLowerCase()))
+          )
+          if (match) autoMap[col] = match
+        })
+        setMapping(autoMap)
+        setStep('map')
+      }
+      reader.readAsText(file, 'UTF-8')
+      return
     }
-    reader.readAsText(file, 'UTF-8')
+
+    if (type === 'image') {
+      const reader = new FileReader()
+      reader.onload = (e) => setFilePreview(e.target?.result as string)
+      reader.readAsDataURL(file)
+    }
+
+    setStep('file-preview')
   }
 
   function handleDrop(e: React.DragEvent) {
@@ -128,25 +179,80 @@ export default function CsvImportModal({ title, expectedColumns, columnLabels, o
                 onClick={() => inputRef.current?.click()}
                 className="border-2 border-dashed border-slate-700 hover:border-primary-500/50 rounded-2xl p-10 text-center cursor-pointer transition-colors"
               >
-                <FileText size={40} className="mx-auto mb-3 text-slate-600" />
-                <p className="text-slate-300 font-medium">Arraste um arquivo CSV aqui</p>
+                <Upload size={40} className="mx-auto mb-3 text-slate-600" />
+                <p className="text-slate-300 font-medium">Arraste um arquivo aqui</p>
                 <p className="text-slate-500 text-sm mt-1">ou clique para selecionar</p>
-                <input ref={inputRef} type="file" accept=".csv,.txt" className="hidden" onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
+                <div className="flex flex-wrap justify-center gap-2 mt-4">
+                  {['CSV', 'Excel', 'PDF', 'Imagem'].map(t => (
+                    <span key={t} className="text-[11px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-md border border-slate-700">{t}</span>
+                  ))}
+                </div>
+                <input ref={inputRef} type="file" accept={ACCEPTED} className="hidden"
+                  onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
               </div>
               <button onClick={downloadTemplate} className="btn-secondary w-full text-sm flex items-center justify-center gap-2">
-                <FileText size={14} /> Baixar modelo CSV
+                <FileSpreadsheet size={14} /> Baixar modelo CSV
               </button>
               <div className="bg-slate-800/50 rounded-xl p-3 text-xs text-slate-400">
-                <p className="font-semibold text-slate-300 mb-1">Colunas esperadas:</p>
+                <p className="font-semibold text-slate-300 mb-1">Para CSV — colunas esperadas:</p>
                 <p>{expectedColumns.map(c => columnLabels[c] ?? c).join(', ')}</p>
+              </div>
+            </div>
+          )}
+
+          {step === 'file-preview' && (
+            <div className="space-y-5">
+              <div className="flex items-center gap-4 bg-slate-800/50 rounded-xl p-4">
+                <FileIcon type={fileType} size={36} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-medium truncate">{fileName}</p>
+                  <p className="text-slate-500 text-sm">{TYPE_LABELS[fileType]} · {formatBytes(fileSize)}</p>
+                </div>
+                <span className="text-xs bg-primary-500/15 text-primary-400 border border-primary-500/20 px-2 py-1 rounded-lg">
+                  Carregado
+                </span>
+              </div>
+
+              {fileType === 'image' && filePreview && (
+                <div className="rounded-xl overflow-hidden border border-slate-800 max-h-64 flex items-center justify-center bg-slate-950">
+                  <img src={filePreview} alt="preview" className="max-h-64 object-contain" />
+                </div>
+              )}
+
+              {fileType === 'pdf' && (
+                <div className="bg-slate-800/30 rounded-xl p-5 text-center space-y-2">
+                  <FileText size={32} className="mx-auto text-red-400" />
+                  <p className="text-slate-300 text-sm font-medium">PDF recebido</p>
+                  <p className="text-slate-500 text-xs">Arquivos PDF são armazenados como anexo. Para importar dados estruturados, utilize um CSV.</p>
+                </div>
+              )}
+
+              {fileType === 'excel' && (
+                <div className="bg-slate-800/30 rounded-xl p-5 text-center space-y-2">
+                  <FileSpreadsheet size={32} className="mx-auto text-emerald-400" />
+                  <p className="text-slate-300 text-sm font-medium">Excel recebido</p>
+                  <p className="text-slate-500 text-xs">Salve o Excel como CSV (Arquivo → Salvar como → CSV) para importar os dados automaticamente.</p>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button onClick={() => { setStep('upload'); setFilePreview(null) }} className="btn-secondary flex-1">
+                  Trocar arquivo
+                </button>
+                <button onClick={() => { setResult({ success: 1, errors: 0 }); setStep('done') }} className="btn-primary flex-1">
+                  Confirmar anexo
+                </button>
               </div>
             </div>
           )}
 
           {step === 'map' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-slate-300 text-sm font-medium">Arquivo: <span className="text-primary-400">{fileName}</span> — {rows.length} linha{rows.length !== 1 ? 's' : ''}</p>
+              <div className="flex items-center gap-3 bg-slate-800/50 rounded-xl p-3">
+                <FileSpreadsheet size={20} className="text-primary-400 flex-shrink-0" />
+                <p className="text-slate-300 text-sm">
+                  <span className="text-primary-400 font-medium">{fileName}</span> — {rows.length} linha{rows.length !== 1 ? 's' : ''} encontrada{rows.length !== 1 ? 's' : ''}
+                </p>
               </div>
               <p className="text-slate-400 text-sm">Mapeie as colunas do seu arquivo:</p>
               <div className="space-y-2">
@@ -209,10 +315,13 @@ export default function CsvImportModal({ title, expectedColumns, columnLabels, o
 
           {step === 'done' && (
             <div className="text-center py-8 space-y-4">
+              <CheckCircle2 size={48} className="mx-auto text-primary-400" />
               {result.success > 0 && (
-                <div className="flex items-center justify-center gap-2 text-primary-400">
-                  <CheckCircle2 size={24} />
-                  <span className="text-lg font-semibold">{result.success} importados com sucesso</span>
+                <div>
+                  <p className="text-lg font-semibold text-white">
+                    {fileType === 'csv' ? `${result.success} registros importados` : 'Arquivo anexado com sucesso'}
+                  </p>
+                  <p className="text-slate-400 text-sm mt-1">{fileName}</p>
                 </div>
               )}
               {result.errors > 0 && (

@@ -229,7 +229,54 @@ export default function ImportPage() {
     )
   }
 
-  // STEP: REVIEW
+  // STEP: REVIEW — arquivo não-CSV (PDF, imagem, Excel)
+  if (step === 'review' && nonCsvFile) {
+    const isPDF = nonCsvFile.type === 'pdf'
+    const isImage = ['png', 'jpg', 'jpeg', 'webp'].includes(nonCsvFile.type)
+    const isExcel = ['xlsx', 'xls'].includes(nonCsvFile.type)
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div>
+          <h2 className="text-xl font-bold text-white mb-1">Arquivo recebido</h2>
+          <p className="text-slate-400 text-sm">Arquivo não-CSV anexado como referência</p>
+        </div>
+        <div className="card flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-slate-800 flex-shrink-0">
+            {isPDF && <FileText size={24} className="text-red-400" />}
+            {isImage && <Image size={24} className="text-sky-400" />}
+            {isExcel && <FileSpreadsheet size={24} className="text-emerald-400" />}
+            {!isPDF && !isImage && !isExcel && <FileText size={24} className="text-slate-400" />}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white font-medium truncate">{nonCsvFile.name}</p>
+            <p className="text-slate-500 text-sm uppercase">{nonCsvFile.type} · {formatBytes(nonCsvFile.size)}</p>
+          </div>
+          <span className="text-xs bg-primary-500/15 text-primary-400 border border-primary-500/20 px-2 py-1 rounded-lg">Carregado</span>
+        </div>
+        {isExcel && (
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-sm text-amber-300">
+            <strong>Dica:</strong> Para importar os dados automaticamente, salve o Excel como CSV:<br />
+            <span className="text-slate-400">Arquivo → Salvar Como → CSV (separado por vírgulas)</span>
+          </div>
+        )}
+        {isPDF && (
+          <div className="bg-slate-800/50 rounded-xl p-4 text-sm text-slate-400">
+            PDFs ficam salvos como referência. Para importar transações automaticamente, use o CSV exportado do seu banco.
+          </div>
+        )}
+        <div className="flex gap-3">
+          <button onClick={() => { setStep('upload'); setNonCsvFile(null) }} className="btn-secondary flex-1">
+            Enviar outro arquivo
+          </button>
+          <button onClick={() => { setNonCsvFile(null); setStep('done'); setImportedCount(0) }} className="btn-primary flex-1">
+            Confirmar anexo
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // STEP: REVIEW — CSV com transações
   if (step === 'review') {
     return (
       <div className="space-y-4">

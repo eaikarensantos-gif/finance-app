@@ -62,11 +62,22 @@ export default function ImportPage() {
     if (file) processFile(file)
   }
 
+  function formatBytes(bytes: number) {
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  }
+
   async function processFile(file: File) {
-    if (!file.name.endsWith('.csv')) {
-      setErrors(['Apenas arquivos .csv são suportados no momento.'])
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
+    const isCSV = ['csv', 'txt'].includes(ext)
+
+    if (!isCSV) {
+      setNonCsvFile({ name: file.name, type: ext, size: file.size })
+      setStep('review')
       return
     }
+
+    setNonCsvFile(null)
     setParsing(true)
     setFileName(file.name)
 

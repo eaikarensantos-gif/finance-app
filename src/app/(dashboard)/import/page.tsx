@@ -382,7 +382,9 @@ export default function ImportPage() {
       <CheckCircle2 size={64} className="mx-auto text-primary-400" />
       <div>
         <h2 className="text-2xl font-bold text-white">Importação concluída!</h2>
-        <p className="text-slate-400 mt-2">{importedCount} transações importadas com sucesso.</p>
+        <p className="text-slate-400 mt-2">
+          {importedCount > 0 ? `${importedCount} transações importadas com sucesso.` : 'Arquivo anexado com sucesso.'}
+        </p>
       </div>
       <div className="flex gap-3 justify-center">
         <button onClick={() => { setStep('upload'); setRows([]) }} className="btn-secondary">

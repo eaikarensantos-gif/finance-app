@@ -34,6 +34,7 @@ export default function ImportPage() {
   const [fileName, setFileName] = useState('')
   const [detectedProfile, setDetectedProfile] = useState<'pf' | 'pj' | 'unknown'>('unknown')
   const [selectAll, setSelectAll] = useState(true)
+  const [nonCsvFile, setNonCsvFile] = useState<{ name: string; type: string; size: number } | null>(null)
 
   useEffect(() => { loadData() }, [])
 

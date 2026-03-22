@@ -197,10 +197,15 @@ export default function ImportPage() {
             <div className="flex flex-col items-center gap-3">
               <Upload size={40} className="text-slate-500" />
               <p className="text-slate-300 font-medium">Clique ou arraste o arquivo aqui</p>
-              <p className="text-slate-500 text-sm">Suporta CSV do Nubank NuConta (PF e PJ)</p>
+              <p className="text-slate-500 text-sm">CSV do Nubank para importar transações</p>
+              <div className="flex flex-wrap justify-center gap-2 mt-1">
+                {['CSV', 'PDF', 'Excel', 'Imagem'].map(t => (
+                  <span key={t} className="text-[11px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-md border border-slate-700">{t}</span>
+                ))}
+              </div>
             </div>
           )}
-          <input id="file-input" type="file" accept=".csv" className="hidden" onChange={handleFileInput} />
+          <input id="file-input" type="file" accept=".csv,.txt,.pdf,.xlsx,.xls,.png,.jpg,.jpeg" className="hidden" onChange={handleFileInput} />
         </div>
 
         {errors.length > 0 && (

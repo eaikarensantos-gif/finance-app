@@ -8,7 +8,7 @@ import { formatCurrency } from '@/lib/utils'
 import type { Account, Category } from '@/types'
 import {
   Upload, FileText, CheckCircle2, XCircle, AlertCircle,
-  Loader2, ChevronDown, ChevronUp, X
+  Loader2, ChevronDown, ChevronUp, X, FileSpreadsheet, Image
 } from 'lucide-react'
 import { useEffect } from 'react'
 

@@ -162,14 +162,17 @@ export function cleanDescription(description: string): string {
 
 export function guessCategory(description: string): string {
   const lower = description.toLowerCase()
-  if (/mercado|supermercado|feira|hortifruti/.test(lower)) return 'Supermercado'
-  if (/restaurante|lanche|comida|almoço|janta|café|pizza|hamburguer/.test(lower)) return 'Alimentação'
-  if (/uber|99|ônibus|metrô|gasolina|combustível|estacionamento/.test(lower)) return 'Transporte'
-  if (/luz|energia|água|internet|telefone|plano/.test(lower)) return 'Moradia'
+  if (/mercado|supermercado|hortifruti/.test(lower)) return 'Supermercado'
+  if (/\bfeira\b/.test(lower)) return 'Feira'
+  if (/restaurante|lanche|comida|almoço|janta|café|pizza|hamburguer|padaria|açougue/.test(lower)) return 'Alimentação'
+  if (/uber|99|ônibus|metrô|gasolina|combustível|estacionamento|passagem/.test(lower)) return 'Transporte'
+  if (/luz|energia|água|internet|telefone|plano|aluguel|condomínio/.test(lower)) return 'Moradia'
   if (/netflix|spotify|amazon|prime|disney|assinatura/.test(lower)) return 'Assinaturas'
-  if (/médico|farmácia|remédio|consulta|hospital/.test(lower)) return 'Saúde'
-  if (/curso|escola|faculdade|livro/.test(lower)) return 'Educação'
-  if (/roupa|tênis|sapato|calça|camisa/.test(lower)) return 'Roupas'
+  if (/médico|farmácia|remédio|consulta|hospital|clínica|exame/.test(lower)) return 'Saúde'
+  if (/curso|escola|faculdade|livro|educação/.test(lower)) return 'Educação'
+  if (/roupa|tênis|sapato|calça|camisa|moda/.test(lower)) return 'Roupas'
+  if (/salão|cabelereiro|manicure|pedicure|barbearia|estética|maquiagem|cosmético|beleza/.test(lower)) return 'Beleza'
+  if (/pet|veterinário|ração|petshop|animal/.test(lower)) return 'Pet'
   if (/salário|pagamento|freelance/.test(lower)) return 'Salário'
   return 'Outros (despesa)'
 }

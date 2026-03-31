@@ -45,3 +45,5 @@ public/worker-*.js
 # WhatsApp session
 whatsapp-bot/.wwebjs_auth/
 whatsapp-bot/.wwebjs_cache/
+
+.vercel
